@@ -31,12 +31,13 @@ elements
 
 #Almacenar los links que necesitamos en un objeto
 refs <- elements %>% html_attr("href")
-refs <- refs[6:15]
+x_inicio<-(length(refs)-10)+1
+refs <- refs[x_inicio:length(refs)]
 refs
 
 #Referenciar los nombres de los chunk y enlistar las url obtenidad para cada chunk en un tibble
 nom_chunk <- elements %>% html_text()
-nom_chunk <- nom_chunk[6:15]
+nom_chunk <- nom_chunk[x_inicio:length(nom_chunk)]
 db_url<-tibble(nom_chunk,url=paste0(url_geih18,refs))
 
 ## Revisar el tibble de urls
@@ -61,7 +62,8 @@ for (i in 1:n){
 
 db <- as_tibble(db)
 
-saveRDS(db,file="Poblem_set_1_WS_JSV/Data/GEIH_2018.rds")
+saveRDS(object = db, file = "C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Datos_geih_bogota.rds")
+
 
 ## Cargar datos
 
