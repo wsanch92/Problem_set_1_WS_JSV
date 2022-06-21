@@ -60,27 +60,45 @@ for (i in 1:n){
   cat("chunk OK:", i, ", ")
 }
 
-db <- as_tibble(db)
 
+## Guardar base de datos de GEIH
 saveRDS(object = db, file = "C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Datos_geih_bogota.rds")
 
 
 ## Cargar datos
 
+db <- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Datos_geih_bogota.rds")
 
 
-## Creación y modificación de variables
-
-## Base con personas mayores de 18 años y que esten ocupados
-
-db_1 <- db_1 %>% mutate(db_1,)
+## Creación y tratamiento de variables
+## ocupados  mayores de 18
 db_1 <- db_1[db_1$age >= 18 & db_1$ocu == 1, ]
+
+## Creación de lista con las variables elegibles
+variables <- c('age','totalHoursWorked','ingtot','ingtotes','ingtotob','p6210','p6210s1','p6240','relab','sex','fex_c','mes','p6426')
+db_final <- db_1[,variables]  ## Se filtra la base por la lista de variables elegibles
+db_final%>%head()
+colnames(db_final)
+
+## Renombrar variables
+names (db_final) <- c('edad','horastrabajadas','ingreso','ingtotes','ingtotob','niveleduc','p6210s1','actividad','ocupacion','sex','fex_c','mes','tiempoempresa')
+## Creación de la variable de experiencia potencial según litera
+db_final <- db_final %>% mutate(exp_potencial=edad-5-p6210s1)
+
+## Creación de lista de variables elegidas
+vars_final <- c('edad','horastrabajadas','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa','exp_potencial')
+## Imputamos valores en 0 para la experiencia potencial negativa
+db_final <- db_final %>% 
+  mutate(exp_potencial = ifelse(test = exp_potencial < 0, 
+                                yes = 0, 
+                                no = exp_potencial))
 
 ## Tablas y summarice
 
-## Resumen de toda la base
 
-skim(db)
+## Resumen de la base con las variables elegidas
+
+skim(db_final[,vars_final])
 
 ## Gráficos
 
