@@ -10,7 +10,7 @@
 
 ##llamar packages
 require(pacman)
-p_load(tidyverse, rvest, tibble,rio,skimr,caret)
+p_load(tidyverse, rvest, tibble,rio,skimr,caret,stargazer)
 
 
 
@@ -72,28 +72,41 @@ db <- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Datos_geih_bogota.rd
 
 ## Creación y tratamiento de variables
 ## ocupados  mayores de 18
-db_1 <- db_1[db_1$age >= 18 & db_1$ocu == 1, ]
+db_1 <- db[db$age >= 18 & db$ocu == 1, ]
 
 ## Creación de lista con las variables elegibles
-variables <- c('age','totalHoursWorked','ingtot','ingtotes','ingtotob','p6210','p6210s1','p6240','relab','sex','fex_c','mes','p6426')
+variables <- c('age','ingtot','ingtotes','ingtotob','p6210','p6210s1','p6240','relab','sex','fex_c','mes','p6426')
 db_final <- db_1[,variables]  ## Se filtra la base por la lista de variables elegibles
 db_final%>%head()
 colnames(db_final)
 
 ## Renombrar variables
-names (db_final) <- c('edad','horastrabajadas','ingreso','ingtotes','ingtotob','niveleduc','p6210s1','actividad','ocupacion','sex','fex_c','mes','tiempoempresa')
-## Creación de la variable de experiencia potencial según litera
-db_final <- db_final %>% mutate(exp_potencial=edad-5-p6210s1)
+names (db_final) <- c('edad','ingreso','ingtotes','ingtotob','niveleduc','p6210s1','actividad','ocupacion','sex','fex_c','mes','tiempoempresa')
 
 ## Creación de lista de variables elegidas
-vars_final <- c('edad','horastrabajadas','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa','exp_potencial')
-## Imputamos valores en 0 para la experiencia potencial negativa
-db_final <- db_final %>% 
-  mutate(exp_potencial = ifelse(test = exp_potencial < 0, 
-                                yes = 0, 
-                                no = exp_potencial))
+vars_final <- c('edad','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa')
 
-## Tablas y summarice
+db_final <- db_final %>% mutate(rangos_edad= case_when(edad <= 24 ~ "18-24", 
+                                                       edad >= 25 & edad < 30 ~ "25-29", 
+                                                       edad >= 30 & edad < 35 ~ "30-34", 
+                                                       edad >= 35 & edad < 40 ~ "35-39",
+                                                       edad >= 40 & edad < 45 ~ "40-44", 
+                                                       edad >= 45 & edad < 50 ~ "45-49", 
+                                                       edad >= 50 & edad < 55 ~ "50-54", 
+                                                       edad >= 55 & edad < 60 ~ "55-59",
+                                                       edad >= 60 & edad < 65 ~ "60-64", 
+                                                       edad >= 65 & edad < 70 ~ "65-69", 
+                                                       edad >= 70 & edad < 75 ~ "70-74", 
+                                                       edad >= 75 & edad < 80 ~ "75-79",
+                                                       edad >= 80 ~ "80 y más"))
+## variables de población  para hacer la pirámide poblacional
+db_final  <- db_final %>% mutate( pob_sex=1)
+
+
+db_final <- db_final %>% mutate(db_final, edad_sqr=edad^2) ## edad al cuadrado
+db_final <- db_final %>% mutate(db_final, tiempoempresa_sqr=tiempoempresa^2) ## experiencia al cuadrado medido en meses
+
+############################ Tablas y summarice  ############################
 
 
 ## Resumen de la base con las variables elegidas
@@ -102,10 +115,47 @@ skim(db_final[,vars_final])
 
 ## Gráficos
 
+ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
+  geom_histogram(data=db_1 , aes(x=ingtotes) , fill="blue" , alpha=0.5) +
+  geom_histogram(data=db_1 , aes(x=ingtotob) , fill="red" , alpha=0.5)
+#
+
+ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
+  geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue1" , alpha=0.5)
+
+ggplot(data = db_final , 
+       mapping = aes(x = edad , y = ingreso , group=as.factor(sex) , color=as.factor(sex))) +
+  geom_point()
+
+
+
+ggplot(data = db_final , 
+       mapping = aes(x = rangos_edad , y = edad , group=as.factor(sex) , color=as.factor(sex))) + 
+         geom_col()
+
+
+## Pirámide poblacional en muestra
+ggplot(db_final, aes(x = `rangos_edad`, y =  pob_sex, fill = sex)) + 
+  geom_col(data = subset(db_final, sex == 1) %>% mutate(pob_sex = -pob_sex), width = 0.5, fill = "blue") + 
+  geom_col(data = subset(db_final, sex == 0) %>% mutate(pob_sex = pob_sex), width = 0.5, fill = "pink") + coord_flip() +
+  scale_y_continuous( breaks = c(seq(-1200,-400, by = 400),
+                                  seq(0,1200, by=400)),
+                      labels = c(seq(-1200,-400, by = 400)* -1,
+                                 seq(0,1200, by=400))) 
+
 
 
 
 ## Regresiones y resultados
+
+
+reg1<-lm(ingreso~edad+edad_sqr,data=db_final)
+
+reg2<-lm(ingreso~edad+edad_sqr+niveleduc+as.factor(actividad)+tiempoempresa+tiempoempresa_sqr,data=db_final)
+
+
+stargazer(reg1,reg2,type="text")
+
 
 
 
