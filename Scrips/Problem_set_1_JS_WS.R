@@ -67,9 +67,12 @@ saveRDS(object = db, file = "C:/Users/walte/OneDrive/Documentos/Maestría en Eco
 
 ## Cargar datos
 
-db <- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Datos_geih_bogota.rds")
+#pc Walter
+#db <- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Datos_geih_bogota.rds")
 
+#pc juancho
 
+db<- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
 
 ## Creación y tratamiento de variables
 ## ocupados  mayores de 18
@@ -77,44 +80,34 @@ db <- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Datos_geih_bogota.rd
 db_1 <- db[db$age >= 18 & db$ocu == 1, ]
 colnames(db_1)
 
-##  Reisión de la variable ocupados "ocu"
-table(db_1$ocu)
-table(db_1$dsi)
-table(db_1$p6240)
-table(db_1$relab)
-table(db_1$pet)
-table(db_1$formal)
-table(db_1$pea)
-table(db_1$informal)
-table(db_1$oficio)
+##Análisis de ingresos totales
 
+table(db_final$ingreso==0)
+db_1[db_1$ingreso==0,]$ingtotes
 
-summary(as.numeric(db_1$ingtot))
-View(db_1[order(db_1$directorio, db_1$secuencia_p, db_1$orden),c("directorio", "secuencia_p", "orden","ingtot")])
-db_1 <- db_1[order(db_1$directorio, db_1$secuencia_p, db_1$orden),]
-View(db_1[,c("directorio", "secuencia_p", "orden","ingtot")])
+variables_ingreso <- c("ingtot", "ingtotes", "ingtotob", "iof1", "iof1es", "iof2", "iof2es", "iof3h", "iof3hes", "iof3i", "iof3ies", "iof6", "iof6es", "isa", "isaes", "ie", "iees", "imdi", "imdies", "impa", "impaes", "p6240", "ocu", "relab")
+j_1<- db_1[db_1$ingtot==0,variables_ingreso]
+View(j_1)
+skim(j_1)
+##Luego de indentificar que las observaciones que tienen un ingreso total en 0 y que esto se mantienen aún luego de la imputación decidimos borrarlas, esto corresponde a 265 observaciones.
+db_1<- db_1[db_1$ingtot>0,]
+skim(db_1$ingtot)
 
-
-table(db_1[db_1$y_total_m>0,]$ocu)
-table(db_1[db_1$ingtot>0,]$ocu)
-table(db_1[db_1$ingtotob>0,]$ocu)
-table(db_1[db_1$ingtot>0,]$p6240)
-
-ggplot() + geom_histogram(data=db_1 , aes(x=y_total_m) , fill="coral1" , alpha=0.5) +
-  geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue" , alpha=0.5)
+#ggplot() + geom_histogram(data=db_1 , aes(x=y_total_m) , fill="coral1" , alpha=0.5) +
+  #geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue" , alpha=0.5)
 
 
 ## Creación de lista con las variables elegibles
-variables <- c('age','ingtot','ingtotes','ingtotob','p6210','p6210s1','p6240','relab','sex','fex_c','mes','p6426')
+variables <- c('age','ingtot','ingtotes','ingtotob','p6210','p6210s1','p6240','relab','sex','fex_c','mes','p6426','oficio')
 db_final <- db_1[,variables]  ## Se filtra la base por la lista de variables elegibles
 db_final%>%head()
 colnames(db_final)
 
 ## Renombrar variables
-names (db_final) <- c('edad','ingreso','ingtotes','ingtotob','niveleduc','p6210s1','actividad','ocupacion','sex','fex_c','mes','tiempoempresa')
+names (db_final) <- c('edad','ingreso','ingtotes','ingtotob','niveleduc','p6210s1','actividad','ocupacion','sex','fex_c','mes','tiempoempresa','oficio')
 
 ## Creación de lista de variables elegidas
-vars_final <- c('edad','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa','ocupacion')
+vars_final <- c('edad','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa','ocupacion','oficio')
 
 db_final <- db_final %>% mutate(rangos_edad= case_when(edad <= 24 ~ "18-24", 
                                                        edad >= 25 & edad < 30 ~ "25-29", 
@@ -145,17 +138,18 @@ skim(db_final[,vars_final])
 
 ## Gráficos
 
-ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
-  geom_histogram(data=db_1 , aes(x=ingtotes) , fill="blue" , alpha=0.5) +
-  geom_histogram(data=db_1 , aes(x=ingtotob) , fill="red" , alpha=0.5)
+#ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
+  #geom_histogram(data=db_1 , aes(x=ingtotes) , fill="blue" , alpha=0.5) +
+  #geom_histogram(data=db_1 , aes(x=ingtotob) , fill="red" , alpha=0.5)
 #
 
-ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
-  geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue1" , alpha=0.5)
+#ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
+  #geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue1" , alpha=0.5)
 
 ggplot(data = db_final , 
        mapping = aes(x = edad , y = ingreso , group=as.factor(sex) , color=as.factor(sex))) +
   geom_point()
+
 
 
 
@@ -175,125 +169,106 @@ ggplot(db_final, aes(x = `rangos_edad`, y =  pob_sex, fill = sex)) +
 
 
 
+##Regresiones y resultados
 
-## Regresiones y resultados
-
-#revisar las dos vareiables de ocupación porque una contiene los ocupados más la PET o PEA
+#Revisar las dos vareiables de ocupación porque una contiene los ocupados más la PET o PEA
 reg1<-lm(ingreso~edad+edad_sqr,data=db_final)
 reg2<-lm(ingreso~edad+edad_sqr+niveleduc,data=db_final)
-reg3<-lm(ingreso~edad+edad_sqr+niveleduc+factor(actividad),data=db_final)
-reg4<-lm(ingreso~edad+edad_sqr+niveleduc+factor(actividad)+tiempoempresa,data=db_final)
-reg5<-lm(ingreso~edad+edad_sqr+niveleduc+factor(actividad)+tiempoempresa+tiempoempresa_sqr,data=db_final)
-reg6<-lm(ingreso~edad+edad_sqr+niveleduc+factor(actividad)+tiempoempresa+tiempoempresa_sqr, factor(ocupacion),data=db_final)
+reg3<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa,data=db_final)
+reg4<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_final)
+## debido a que el signo del coeficiente no es el esperado según la teoria, planteamos un modelo en el cual solo incluimos las personas que se encuentran trabajando
+reg5<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, factor(ocupacion),data=db_final)
+reg5.1<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, factor(ocupacion),data=db_final[db_final$actividad==1,])
+reg5.2<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, factor(oficio),data=db_final)
+reg5.3<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, factor(oficio),data=db_final[db_final$actividad==1,])
 
 
-stargazer(reg1,reg2,reg3,reg4,reg5,reg6,type="text")
 
+
+stargazer(reg1,reg2,reg3,reg4,reg5,reg5.1,reg5.2,reg5.3,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones.htm")
+?stargazer
 
 #Predicciones
-db_final$yhat_reg1 <-predict(reg1)
-var(db_final$yhat_reg1)
+
+db_final$yhat_reg1 <-predict(reg1,db_final)
+yhat_reg1<-predict(reg1,db_final)
+mse_1<- mean((yhat_reg1-db_final$ingreso)^2)
 
 db_final$yhat_reg2 <-predict(reg2)
-var(db_final$yhat_reg2)
+yhat_reg2<-predict(reg2,db_final)
+mse_2<- mean((yhat_reg2-db_final$ingreso)^2)
 
 db_final$yhat_reg3 <-predict(reg3)
-var(db_final$yhat_reg3)
+yhat_reg3<-predict(reg3,db_final)
+mse_3<- mean((yhat_reg3-db_final$ingreso)^2)
 
 db_final$yhat_reg4 <-predict(reg4)
-var(db_final$yhat_reg4)
+yhat_reg4<-predict(reg4,db_final)
+mse_4<- mean((yhat_reg4-db_final$ingreso)^2)
 
 db_final$yhat_reg5 <-predict(reg5)
-var(db_final$yhat_reg5)
+yhat_reg5<-predict(reg5,db_final)
+mse_5<- mean((yhat_reg5-db_final$ingreso)^2)
 
-db_final$yhat_reg6 <-predict(reg6)
-var(db_final$yhat_reg6)
+db_final[db_final$actividad==1,]$yhat_reg5.1 <-predict(reg5.1)
+yhat_reg5.1<-predict(reg5.1,db_final)
+mse_5.1<- mean((yhat_reg5.1-db_final$ingreso)^2)
+
+db_final$yhat_reg5.2 <-predict(reg5.2)
+yhat_reg5.2<-predict(reg5.2,db_final)
+mse_5.2<- mean((yhat_reg5.2-db_final$ingreso)^2)
+
+db_final[db_final$actividad==1,]$yhat_reg5.3 <-predict(reg5.3)
+yhat_reg5.3<-predict(reg5.3,db_final)
+mse_5.3<- mean((yhat_reg5.3-db_final$ingreso)^2)
+
+mse_f<-c(mse_1,mse_2,mse_3,mse_4,mse_5,mse_5.1,mse_5.2,mse_5.3)
+mse_f
+
 
 ## grafico de ingreso predicho por edad
 ggplot() + 
   geom_col(db_final , mapping = aes(x = edad, y = yhat_reg1, fill="reg1")) +
-  geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg2, fill="reg2")) +
+  geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg2, fill="reg2")) + 
   geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg3, fill="reg3")) +
   geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg4, fill="reg4")) +
   geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg5, fill="reg5")) +
-  geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg6, fill="reg6")) 
+  geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg5.1, fill="reg5.1")) +
+  geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg5.2, fill="reg5.2")) +
+  geom_col(db_final , mapping = aes(x = edad, y =  yhat_reg5.3, fill="reg5.3"))           
 
-
-## grafico de ingreso predicho por rangos de edad
-ggplot() + 
-  geom_col(db_final , mapping = aes(x = rangos_edad, y = yhat_reg1, fill="reg1")) +
-  geom_col(db_final , mapping = aes(x = rangos_edad, y =  yhat_reg2, fill="reg2")) +
-  geom_col(db_final , mapping = aes(x = rangos_edad, y =  yhat_reg3, fill="reg3")) +
-  geom_col(db_final , mapping = aes(x = rangos_edad, y =  yhat_reg4, fill="reg4")) +
-  geom_col(db_final , mapping = aes(x = rangos_edad, y =  yhat_reg5, fill="reg5")) +
-  geom_col(db_final , mapping = aes(x = rangos_edad, y =  yhat_reg6, fill="reg6")) 
-
-
-### regresiones con ingreso mayor a cero y actividad 1
-reg1<-lm(ingreso~edad+edad_sqr,data=db_final[db_final$ingreso>0 & db_final$actividad==1,])
-reg2<-lm(ingreso~edad+edad_sqr+niveleduc,data=db_final[db_final$ingreso>0 & db_final$actividad==1,])
-reg3<-lm(ingreso~edad+edad_sqr+niveleduc,data=db_final[db_final$ingreso>0 & db_final$actividad==1,])
-reg4<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa,data=db_final[db_final$ingreso>0 & db_final$actividad==1,])
-reg5<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_final[db_final$ingreso>0 & db_final$actividad==1,])
-reg6<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, factor(ocupacion),data=db_final[db_final$ingreso>0 & db_final$actividad==1,])
-
-db_final[db_final$ingreso>0 & db_final$actividad==1,]$yhat_reg1 <-predict(reg1)
-db_final[db_final$ingreso>0 & db_final$actividad==1,]$yhat_reg2 <-predict(reg2)
-db_final[db_final$ingreso>0 & db_final$actividad==1,]$yhat_reg3 <-predict(reg3)
-db_final[db_final$ingreso>0 & db_final$actividad==1,]$yhat_reg4 <-predict(reg4)
-db_final[db_final$ingreso>0 & db_final$actividad==1,]$yhat_reg5 <-predict(reg5)
-db_final[db_final$ingreso>0 & db_final$actividad==1,]$yhat_reg6 <-predict(reg6)
-
-ggplot() + 
-  geom_col(db_final[db_final$ingreso>0 & db_final$actividad==1,] , mapping = aes(x = edad, y = yhat_reg1, fill="reg1")) +
-  geom_col(db_final[db_final$ingreso>0 & db_final$actividad==1,] , mapping = aes(x = edad, y =  yhat_reg2, fill="reg2")) +
-  geom_col(db_final[db_final$ingreso>0 & db_final$actividad==1,] , mapping = aes(x = edad, y =  yhat_reg3, fill="reg3")) +
-  geom_col(db_final[db_final$ingreso>0 & db_final$actividad==1,] , mapping = aes(x = edad, y =  yhat_reg4, fill="reg4")) +
-  geom_col(db_final[db_final$ingreso>0 & db_final$actividad==1,] , mapping = aes(x = edad, y =  yhat_reg5, fill="reg5")) +
-  geom_col(db_final[db_final$ingreso>0 & db_final$actividad==1,] , mapping = aes(x = edad, y =  yhat_reg6, fill="reg6")) 
-
-
-
-
+## Grafico ingresos predicho por edad modelo 4 
+ggplot() +
+  geom_line(db_final , mapping = aes(x = edad, y =  yhat_reg4, fill="reg4")) +
+  geom_line(db_final, mapping = aes(x = edad, y = ingreso, fill="ingreso"))
+  
 
 ## Bootstrap
 set.seed(2022)
-R<-1000
-betas<-data.frame()
-for (i in 1:R){
-  db_samble<- sample_frac(db_final,size=1,replace=TRUE)
-  f<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr+factor(actividad),db_samble)
-  coefs<-f$coefficients
-  betas[i,1]<-coefs[2]
-  betas[i,2]<-coefs[3]
-  betas[i,3]<-coefs[4]
-  betas[i,4]<-coefs[5]
-  betas[i,5]<-coefs[6]
-  betas[i,6]<-coefs[7]
-  betas[i,7]<-coefs[8]
-  betas[i,8]<-coefs[9]
-  betas[i,9]<-coefs[10]
-
-}
-
-## Elaboramos el histograma del bootstrap
-plot(hist(eta_mod1))
-
-mean(eta_mod1)
-
-sqrt(var(eta_mod1))
-
-quantile(eta_mod1,c(0.025,0.975))
 
 
-#boot(dat,statistic , R)
-
-eta.fn<-function(dta,index){
+prueba_boot.fn<-function(db_final,index){
   ## el index se utilizará para obtener los pesos para el bootstrap
-  coef(lm(consumption~price+income,data = data, subset = index))
+  coef(lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_final, subset = index))
 }
 
-boot(db_final, eta.fn, R=1000)
+boot<-boot(db_final, prueba_boot.fn, R=1000)
+
+output<-capture.output(boot)
+output[11]
+boot$t0
+a<-mean(boot$t)-boot$t0
+b<-sd(boot$t)
+a/b
+se<-summary(boot)$
+summary(boot)
+boot$bootSE
+for (a in 6) {
+  CI[a]<-
+  
+}
+
+CI=[coef−1.96×SE,coef+1.96×SE]
 
 ## punto cuatro
 
