@@ -188,39 +188,43 @@ reg5.3<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, fact
 stargazer(reg1,reg2,reg3,reg4,reg5,reg5.1,reg5.2,reg5.3,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones.htm")
 ?stargazer
 
+plot(db_final$edad,db_final$ingreso,xlab = 'Edad', ylab='Ingreso',cex=0.5)
+abline(reg4, col = "red")
+
+
 #Predicciones
 
 db_final$yhat_reg1 <-predict(reg1,db_final)
 yhat_reg1<-predict(reg1,db_final)
-mse_1<- mean((yhat_reg1-db_final$ingreso)^2)
+mse_1<- mean((db_final$ingreso~yhat_reg1)^2)
 
 db_final$yhat_reg2 <-predict(reg2)
 yhat_reg2<-predict(reg2,db_final)
-mse_2<- mean((yhat_reg2-db_final$ingreso)^2)
+mse_2<- mean((db_final$ingreso~yhat_reg2)^2)
 
 db_final$yhat_reg3 <-predict(reg3)
 yhat_reg3<-predict(reg3,db_final)
-mse_3<- mean((yhat_reg3-db_final$ingreso)^2)
+mse_3<- mean((db_final$ingreso~yhat_reg3)^2)
 
 db_final$yhat_reg4 <-predict(reg4)
 yhat_reg4<-predict(reg4,db_final)
-mse_4<- mean((yhat_reg4-db_final$ingreso)^2)
+mse_4<- mean((db_final$ingreso~yhat_reg4)^2)
 
 db_final$yhat_reg5 <-predict(reg5)
 yhat_reg5<-predict(reg5,db_final)
-mse_5<- mean((yhat_reg5-db_final$ingreso)^2)
+mse_5<- mean((db_final$ingreso~yhat_reg5)^2)
 
 db_final[db_final$actividad==1,]$yhat_reg5.1 <-predict(reg5.1)
 yhat_reg5.1<-predict(reg5.1,db_final)
-mse_5.1<- mean((yhat_reg5.1-db_final$ingreso)^2)
+mse_5.1<- mean((db_final$ingreso~yhat_reg5.1)^2)
 
 db_final$yhat_reg5.2 <-predict(reg5.2)
 yhat_reg5.2<-predict(reg5.2,db_final)
-mse_5.2<- mean((yhat_reg5.2-db_final$ingreso)^2)
+mse_5.2<- mean((db_final$ingreso~yhat_reg5.2)^2)
 
 db_final[db_final$actividad==1,]$yhat_reg5.3 <-predict(reg5.3)
 yhat_reg5.3<-predict(reg5.3,db_final)
-mse_5.3<- mean((yhat_reg5.3-db_final$ingreso)^2)
+mse_5.3<- mean((db_final$ingreso~yhat_reg5.3)^2)
 
 mse_f<-c(mse_1,mse_2,mse_3,mse_4,mse_5,mse_5.1,mse_5.2,mse_5.3)
 mse_f
@@ -253,32 +257,104 @@ prueba_boot.fn<-function(db_final,index){
 }
 
 boot<-boot(db_final, prueba_boot.fn, R=1000)
+boot
 
-output<-capture.output(boot)
-output[11]
-boot$t0
-a<-mean(boot$t)-boot$t0
-b<-sd(boot$t)
-a/b
-se<-summary(boot)$
-summary(boot)
-boot$bootSE
-for (a in 6) {
-  CI[a]<-
-  
-}
+reg4
+stargazer(reg4, type="text")
 
-CI=[coef−1.96×SE,coef+1.96×SE]
+## recordar calculo en excel
+#CI=[coef−1.96×SE,coef+1.96×SE]
 
-## punto cuatro
+## derevida en excel para calcular edad pico (mayor ingreso)
+
+
+############# PUNTO CUARTO ######################
+
+## creación variable dummy de sexo 
+
+db_final<- db_final%>%mutate(mujer=ifelse(sex==1,
+                                          0,
+                                          1))
+db_final<- db_final%>%mutate(log_ingreso=log(ingreso))
+
+## Primer modelo diferencia de ingresos por sexo
+mod1<-lm(log_ingreso~mujer,data=db_final)
+mod1
+
+## qué tan bueno es el modelo en la muestra
+db_final$yhat_mod1 <-predict(mod1)
+yhat_mod1<-predict(mod1,db_final)
+mse_mod1<- mean((db_final$log_ingreso-yhat_mod1)^2)
+mse_mod1
+
+
 
 #partir en dos subset por hombre y por mujer y correr las regresiones, estimar y pointar los predichos
 
-#controlar por ocupación para ver como se reduce la brecha o gap y establecer la explicación de porque se disminuye el gab
+db_mujer <- db_final[db_final$sex == 0, ]
+db_hombre <- db_final[db_final$sex == 1, ]
+
+## Modelo con base exclusiva para mujeres
+mod_m<-lm(log_ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_mujer)
+mod_m
+## Modelo con base exclusiva para hombres
+mod_h<-lm(log_ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_hombre)
+mod_h
+
+## Gráfico de modelo por genero 
+plot(db_final$edad,db_final$log_ingreso,xlab = 'Edad', ylab='log_ingreso',cex=0.5)
+abline(mod_m, col = "red")
+abline(mod_h, col = "blue")
+
+## Comprar modelos y exportarlos
+stargazer(mod_m,mod_h,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones_por_sexo.htm")
+
+##recordar hacer la derivada para los modelos por sexo
+
+##bootstrap modelos por sexo 
+set.seed(2022)
 
 
-## punto 5
+prueba_boot.fn<-function(db_mujer,index){
+  ## el index se utilizará para obtener los pesos para el bootstrap
+  coef(lm(log_ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_mujer, subset = index))
+}
 
+boot<-boot(db_mujer, prueba_boot.fn, R=1000)
+boot
+
+mod_m
+stargazer(mod_m, type="text")
+
+##hombre
+
+set.seed(2022)
+
+
+prueba_boot.fn<-function(db_hombre,index){
+  ## el index se utilizará para obtener los pesos para el bootstrap
+  coef(lm(log_ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_hombre, subset = index))
+}
+
+boot<-boot(db_hombre, prueba_boot.fn, R=1000)
+boot
+
+mod_h
+stargazer(mod_h, type="text")
+
+## recordar contruir los intervalos de confianza en Excel
+
+
+##controlar por ocupación para ver como se reduce la brecha y establecer la explicación de porque se disminuye dicha brecha
+
+mod2<-lm(log_ingreso~mujer+as.factor(ocupacion),data=db_final)
+mod2
+mod1
+
+##teorema FWL
+
+
+############# PUNTO QUINTO ######################
 #luego de hacer train y tren,  y después MSE error deben ir disminuyendo hasta un punto y luego subir, esto con cada partición de la muestra
 
 
