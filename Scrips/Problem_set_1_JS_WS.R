@@ -82,29 +82,31 @@ colnames(db_1)
 
 ##Análisis de ingresos totales
 
-table(db_final$ingreso==0)
 db_1[db_1$ingreso==0,]$ingtotes
 
 variables_ingreso <- c("ingtot", "ingtotes", "ingtotob", "iof1", "iof1es", "iof2", "iof2es", "iof3h", "iof3hes", "iof3i", "iof3ies", "iof6", "iof6es", "isa", "isaes", "ie", "iees", "imdi", "imdies", "impa", "impaes", "p6240", "ocu", "relab")
 j_1<- db_1[db_1$ingtot==0,variables_ingreso]
-View(j_1)
-skim(j_1)
+#View(j_1)
+#skim(j_1)
 ##Luego de indentificar que las observaciones que tienen un ingreso total en 0 y que esto se mantienen aún luego de la imputación decidimos borrarlas, esto corresponde a 265 observaciones.
 db_1<- db_1[db_1$ingtot>0,]
-skim(db_1$ingtot)
-
-#ggplot() + geom_histogram(data=db_1 , aes(x=y_total_m) , fill="coral1" , alpha=0.5) +
-  #geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue" , alpha=0.5)
+#skim(db_1$ingtot)
 
 
 ## Creación de lista con las variables elegibles
 variables <- c('age','ingtot','ingtotes','ingtotob','p6210','p6210s1','p6240','relab','sex','fex_c','mes','p6426','oficio')
+##creacion de lista y base
 db_final <- db_1[,variables]  ## Se filtra la base por la lista de variables elegibles
 db_final%>%head()
 colnames(db_final)
 
+
 ## Renombrar variables
 names (db_final) <- c('edad','ingreso','ingtotes','ingtotob','niveleduc','p6210s1','actividad','ocupacion','sex','fex_c','mes','tiempoempresa','oficio')
+
+db_final <- db_final[db_final$ocupacion!=8,]
+
+
 
 ## Creación de lista de variables elegidas
 vars_final <- c('edad','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa','ocupacion','oficio')
@@ -128,6 +130,13 @@ db_final  <- db_final %>% mutate( pob_sex=1)
 
 db_final <- db_final %>% mutate(db_final, edad_sqr=edad^2) ## edad al cuadrado
 db_final <- db_final %>% mutate(db_final, tiempoempresa_sqr=tiempoempresa^2) ## experiencia al cuadrado medido en meses
+
+
+
+#ggplot() + geom_histogram(data=db_1 , aes(x=y_total_m) , fill="coral1" , alpha=0.5) +
+#geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue" , alpha=0.5)
+
+
 
 ############################ Tablas y summarice  ############################
 
@@ -186,7 +195,7 @@ reg5.3<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, fact
 
 
 stargazer(reg1,reg2,reg3,reg4,reg5,reg5.1,reg5.2,reg5.3,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones.htm")
-?stargazer
+#?stargazer
 
 plot(db_final$edad,db_final$ingreso,xlab = 'Edad', ylab='Ingreso',cex=0.5)
 abline(reg4, col = "red")
@@ -196,35 +205,35 @@ abline(reg4, col = "red")
 
 db_final$yhat_reg1 <-predict(reg1,db_final)
 yhat_reg1<-predict(reg1,db_final)
-mse_1<- mean((db_final$ingreso~yhat_reg1)^2)
+mse_1<- mean((db_final$ingreso-yhat_reg1)^2)
 
 db_final$yhat_reg2 <-predict(reg2)
 yhat_reg2<-predict(reg2,db_final)
-mse_2<- mean((db_final$ingreso~yhat_reg2)^2)
+mse_2<- mean((db_final$ingreso-yhat_reg2)^2)
 
 db_final$yhat_reg3 <-predict(reg3)
 yhat_reg3<-predict(reg3,db_final)
-mse_3<- mean((db_final$ingreso~yhat_reg3)^2)
+mse_3<- mean((db_final$ingreso-yhat_reg3)^2)
 
 db_final$yhat_reg4 <-predict(reg4)
 yhat_reg4<-predict(reg4,db_final)
-mse_4<- mean((db_final$ingreso~yhat_reg4)^2)
+mse_4<- mean((db_final$ingreso-yhat_reg4)^2)
 
 db_final$yhat_reg5 <-predict(reg5)
 yhat_reg5<-predict(reg5,db_final)
-mse_5<- mean((db_final$ingreso~yhat_reg5)^2)
+mse_5<- mean((db_final$ingreso-yhat_reg5)^2)
 
 db_final[db_final$actividad==1,]$yhat_reg5.1 <-predict(reg5.1)
 yhat_reg5.1<-predict(reg5.1,db_final)
-mse_5.1<- mean((db_final$ingreso~yhat_reg5.1)^2)
+mse_5.1<- mean((db_final$ingreso-yhat_reg5.1)^2)
 
 db_final$yhat_reg5.2 <-predict(reg5.2)
 yhat_reg5.2<-predict(reg5.2,db_final)
-mse_5.2<- mean((db_final$ingreso~yhat_reg5.2)^2)
+mse_5.2<- mean((db_final$ingreso-yhat_reg5.2)^2)
 
 db_final[db_final$actividad==1,]$yhat_reg5.3 <-predict(reg5.3)
 yhat_reg5.3<-predict(reg5.3,db_final)
-mse_5.3<- mean((db_final$ingreso~yhat_reg5.3)^2)
+mse_5.3<- mean((db_final$ingreso-yhat_reg5.3)^2)
 
 mse_f<-c(mse_1,mse_2,mse_3,mse_4,mse_5,mse_5.1,mse_5.2,mse_5.3)
 mse_f
@@ -347,14 +356,193 @@ stargazer(mod_h, type="text")
 
 ##controlar por ocupación para ver como se reduce la brecha y establecer la explicación de porque se disminuye dicha brecha
 
-mod2<-lm(log_ingreso~mujer+as.factor(ocupacion),data=db_final)
+mod2<-lm(log_ingreso~mujer+as.factor(ocupacion),data=db_final)## primer modelo y~x
 mod2
 mod1
 
 ##teorema FWL
+mod2
+db_final<- db_final%>%mutate(ej=c(rep(0,nrow(db_final)-1),1))
+tail(db_final)
+
+##regresión con la variable ej 
+mod3<-lm(log_ingreso~mujer+ej,data=db_final) ## regresión con la dummy
+mod3
+
+db_final<-db_final %>% mutate(res_y_e=lm(log_ingreso~ej,db_final)$residuals,
+                              res_x_e=lm(mujer~ej,db)$residuals,
+)
+
+mod4<-lm(res_y_e~res_x_e,db_final)
+
+stargazer(mod1,mod3,mod4,type="text")
+
+## qué tan bueno controlando por la empleabilidad en el modelo por sexo
+db_final$yhat_mod2 <-predict(mod2)
+yhat_mod2<-predict(mod2,db_final)
+mse_mod2<- mean((db_final$log_ingreso-yhat_mod2)^2)
+mse_mod2
 
 
 ############# PUNTO QUINTO ######################
 #luego de hacer train y tren,  y después MSE error deben ir disminuyendo hasta un punto y luego subir, esto con cada partición de la muestra
+
+set.seed(10101)
+
+## Creación de las bases de entrenamiento y prueba
+
+db_final<- db_final%>%mutate(edad_3=edad^3,
+                             edad_4=edad^4,
+                             tiempoempresa_3=tiempoempresa^3,
+                             tiempoempresa_4=tiempoempresa^4,
+                             mujer_empresa=mujer*tiempoempresa,
+                             )
+
+
+id_entrenamiento <- sample(1:nrow(db_final),size = 0.7*nrow(db_final),replace=F)
+entrenamiento <- db_final[id_entrenamiento,]
+prueba<- db_final[-id_entrenamiento,]
+
+## Modelo de referencia
+mod_ref <- lm(log_ingreso~1,data=entrenamiento)
+
+y_hat_dentro_mf <- predict(mod_ref, entrenamiento)
+y_hat_fuera_mf <-predict(mod_ref, prueba)
+y_real_dentro_mf <- entrenamiento$log_ingreso
+y_real_fuera_mf <- prueba$log_ingreso
+
+mse_dentro_mf <- mean((y_real_dentro_mf-y_hat_dentro_mf)^2)
+mse_fuera_mf <- mean((y_real_fuera_mf-y_hat_fuera_mf)^2)
+
+mse_fuera_mf/mse_dentro_mf ### ver el overfitting
+
+## Modelo REG4 
+
+mod_reg4 <- lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=entrenamiento)
+
+y_hat_dentro_reg4 <- predict(mod_reg4, entrenamiento)
+y_hat_fuera_reg4 <-predict(mod_reg4, prueba)
+y_real_dentro_reg4 <- entrenamiento$ingreso
+y_real_fuera_reg4 <- prueba$ingreso
+
+mse_dentro_reg4 <- mean((y_real_dentro_reg4-y_hat_dentro_reg4)^2)
+mse_fuera_reg4 <- mean((y_real_fuera_reg4-y_hat_fuera_reg4)^2)
+
+mse_fuera_reg4/mse_dentro_reg4 ### ver el overfitting
+
+## Modelo edad
+
+mod_edad <- lm(ingreso~edad+edad_sqr,data=entrenamiento)
+
+y_hat_dentro_edad <- predict(mod_edad, entrenamiento)
+y_hat_fuera_edad <-predict(mod_edad, prueba)
+y_real_dentro_edad <- entrenamiento$ingreso
+y_real_fuera_edad <- prueba$ingreso
+
+mse_dentro_edad <- mean((y_real_dentro_edad-y_hat_dentro_edad)^2)
+mse_fuera_edad <- mean((y_real_fuera_edad-y_hat_fuera_edad)^2)
+
+mse_fuera_edad/mse_dentro_edad ### ver el overfitting
+
+## Modelo por sexo
+
+mod_sex <- lm(log_ingreso~mujer,data=entrenamiento)
+
+y_hat_dentro_sex <- predict(mod_sex, entrenamiento)
+y_hat_fuera_sex <-predict(mod_sex, prueba)
+y_real_dentro_sex <- entrenamiento$ingreso
+y_real_fuera_sex <- prueba$ingreso
+
+mse_dentro_sex <- mean((y_real_dentro_sex-y_hat_dentro_sex)^2)
+mse_fuera_sex <- mean((y_real_fuera_sex-y_hat_fuera_sex)^2)
+
+mse_fuera_sex/mse_dentro_sex ### ver el overfitting
+
+## Modelo por sexo y edad
+
+mod_sex_edad <- lm(log_ingreso~mujer+edad+edad_sqr,data=entrenamiento)
+
+y_hat_dentro_sex_edad <- predict(mod_sex_edad, entrenamiento)
+y_hat_fuera_sex_edad <-predict(mod_sex_edad, prueba)
+y_real_dentro_sex_edad <- entrenamiento$ingreso
+y_real_fuera_sex_edad <- prueba$ingreso
+
+mse_dentro_sex_edad <- mean((y_real_dentro_sex_edad-y_hat_dentro_sex_edad)^2)
+mse_fuera_sex_edad <- mean((y_real_fuera_sex_edad-y_hat_fuera_sex_edad)^2)
+
+mse_fuera_sex_edad/mse_dentro_sex_edad
+
+##A.3
+## Modelo por sexo  - edad y ocupación
+
+mod_sex_edad_ocu <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion),data=entrenamiento)
+
+y_hat_dentro_sex_edad_ocu <- predict(mod_sex_edad_ocu, entrenamiento)
+y_hat_fuera_sex_edad_ocu <-predict(mod_sex_edad_ocu, prueba)
+y_real_dentro_sex_edad_ocu <- entrenamiento$ingreso
+y_real_fuera_sex_edad_ocu <- prueba$ingreso
+
+mse_dentro_sex_edad_ocu <- mean((y_real_dentro_sex_edad_ocu-y_hat_dentro_sex_edad_ocu)^2)
+mse_dentro_sex_edad_ocu
+mse_fuera_sex_edad_ocu <- mean((y_real_fuera_sex_edad_ocu-y_hat_fuera_sex_edad_ocu)^2)
+mse_fuera_sex_edad_ocu
+
+mse_fuera_sex_edad_ocu/mse_dentro_sex_edad_ocu
+
+## Modelo por sexo  - edad3 y ocupación
+
+mod_sex_edad3 <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3,data=entrenamiento)
+
+y_hat_dentro_sex_edad3 <- predict(mod_sex_edad3, entrenamiento)
+y_hat_fuera_sex_edad3 <-predict(mod_sex_edad3, prueba)
+y_real_dentro_sex_edad3 <- entrenamiento$ingreso
+y_real_fuera_sex_edad3 <- prueba$ingreso
+
+mse_dentro_sex_edad3 <- mean((y_real_dentro_sex_edad3-y_hat_dentro_sex_edad3)^2)
+mse_fuera_sex_edad3 <- mean((y_real_fuera_sex_edad3-y_hat_fuera_sex_edad3)^2)
+
+mse_fuera_sex_edad3/mse_dentro_sex_edad3
+
+## Modelo por sexo - tiempoempresa3
+
+mod_sex_empresa3 <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3,data=entrenamiento)
+
+y_hat_dentro_sex_empresa3 <- predict(mod_sex_empresa3, entrenamiento)
+y_hat_fuera_sex_empresa3 <-predict(mod_sex_empresa3, prueba)
+y_real_dentro_sex_empresa3 <- entrenamiento$ingreso
+y_real_fuera_sex_empresa3 <- prueba$ingreso
+
+mse_dentro_sex_empresa3 <- mean((y_real_dentro_sex_empresa3-y_hat_dentro_sex_empresa3)^2)
+mse_fuera_sex_empresa3 <- mean((y_real_fuera_sex_empresa3-y_hat_fuera_sex_empresa3)^2)
+
+mse_fuera_sex_empresa3/mse_dentro_sex_empresa3
+
+## modelo por sexo - edad4
+
+mod_sex_edad4 <- lm(log_ingreso~mujer+edad+edad_sqr+edad_3+edad_4+as.factor(ocupacion)+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3,data=entrenamiento)
+
+y_hat_dentro_sex_edad4 <- predict(mod_sex_edad4, entrenamiento)
+y_hat_fuera_sex_edad4 <-predict(mod_sex_edad4, prueba)
+y_real_dentro_sex_edad4 <- entrenamiento$ingreso
+y_real_fuera_sex_edad4 <- prueba$ingreso
+
+mse_dentro_sex_edad4 <- mean((y_real_dentro_sex_edad4-y_hat_dentro_sex_edad4)^2)
+mse_fuera_sex_edad4 <- mean((y_real_fuera_sex_edad4-y_hat_fuera_sex_edad4)^2)
+
+mse_fuera_sex_edad4/mse_dentro_sex_edad4
+
+## modelo por sexo - tiempo empresa 4
+
+mod_sex_empresa4 <- lm(log_ingreso~mujer+edad+edad_sqr+edad_3+edad_4+as.factor(ocupacion)+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3+tiempoempresa_4,data=entrenamiento)
+
+y_hat_dentro_sex_empresa4 <- predict(mod_sex_empresa4, entrenamiento)
+y_hat_fuera_sex_empresa4 <-predict(mod_sex_empresa4, prueba)
+y_real_dentro_sex_empresa4 <- entrenamiento$ingreso
+y_real_fuera_sex_empresa4 <- prueba$ingreso
+
+mse_dentro_sex_empresa4 <- mean((y_real_dentro_sex_empresa4-y_hat_dentro_sex_empresa4)^2)
+mse_fuera_sex_empresa4 <- mean((y_real_fuera_sex_empresa4-y_hat_fuera_sex_empresa4)^2)
+
+mse_fuera_sex_empresa4/mse_dentro_sex_empresa4
 
 
