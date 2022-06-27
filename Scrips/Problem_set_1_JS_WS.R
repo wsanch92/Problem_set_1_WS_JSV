@@ -68,11 +68,11 @@ saveRDS(object = db, file = "C:/Users/walte/OneDrive/Documentos/Maestría en Eco
 ## Cargar datos
 
 #pc Walter
-#db <- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Datos_geih_bogota.rds")
+db <- read_rds("C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
 
 #pc juancho
 
-db<- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
+#db<- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
 
 ## Creación y tratamiento de variables
 ## ocupados  mayores de 18
@@ -109,7 +109,7 @@ db_final <- db_final[db_final$ocupacion!=8,]
 
 
 ## Creación de lista de variables elegidas
-vars_final <- c('edad','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa','ocupacion','oficio')
+vars_final <- c('edad','ingreso','niveleduc','actividad','ocupacion','sex','tiempoempresa','oficio')
 
 db_final <- db_final %>% mutate(rangos_edad= case_when(edad <= 24 ~ "18-24", 
                                                        edad >= 25 & edad < 30 ~ "25-29", 
@@ -351,7 +351,7 @@ boot
 mod_h
 stargazer(mod_h, type="text")
 
-## recordar contruir los intervalos de confianza en Excel
+## recordar construir los intervalos de confianza en Excel
 
 
 ##controlar por ocupación para ver como se reduce la brecha y establecer la explicación de porque se disminuye dicha brecha
@@ -387,9 +387,18 @@ mse_mod2
 ############# PUNTO QUINTO ######################
 #luego de hacer train y tren,  y después MSE error deben ir disminuyendo hasta un punto y luego subir, esto con cada partición de la muestra
 
+###################################################################
+## DATOS ATÍPICOS
+Q<- quantile(db_final$log_ingreso,probs = c(0.25,0.75),na.rm=F)
+iqr <- IQR(x=db_final$log_ingreso , na.rm=F)
+up <- Q[2]+1.5*iqr # Upper Range
+low<- Q[1]-1.5*iqr # Lower Range
+###################################################################
+
 set.seed(10101)
 
 ## Creación de las bases de entrenamiento y prueba
+
 
 db_final<- db_final%>%mutate(edad_3=edad^3,
                              edad_4=edad^4,
@@ -406,29 +415,104 @@ prueba<- db_final[-id_entrenamiento,]
 ## Modelo de referencia
 mod_ref <- lm(log_ingreso~1,data=entrenamiento)
 
-y_hat_dentro_mf <- predict(mod_ref, entrenamiento)
-y_hat_fuera_mf <-predict(mod_ref, prueba)
-y_real_dentro_mf <- entrenamiento$log_ingreso
-y_real_fuera_mf <- prueba$log_ingreso
+y_hat_dentro_mf <- exp(predict(mod_ref, entrenamiento))
+y_hat_fuera_mf <-exp(predict(mod_ref, prueba))
+y_real_dentro_mf <- entrenamiento$ingreso
+y_real_fuera_mf <- prueba$ingreso
 
 mse_dentro_mf <- mean((y_real_dentro_mf-y_hat_dentro_mf)^2)
 mse_fuera_mf <- mean((y_real_fuera_mf-y_hat_fuera_mf)^2)
 
 mse_fuera_mf/mse_dentro_mf ### ver el overfitting
 
+
+## Modelo por sexo
+
+mod_sex <- lm(log_ingreso~mujer,data=entrenamiento)
+
+y_hat_dentro_sex <- exp(predict(mod_sex, entrenamiento))
+y_hat_fuera_sex <-exp(predict(mod_sex, prueba))
+y_real_dentro_sex <- entrenamiento$ingreso
+y_real_fuera_sex <- prueba$ingreso
+
+mse_dentro_sex <- mean((y_real_dentro_sex-y_hat_dentro_sex)^2)
+mse_fuera_sex <- mean((y_real_fuera_sex-y_hat_fuera_sex)^2)
+
+mse_fuera_sex/mse_dentro_sex ### ver el overfitting
+
+## Modelo por sexo y edad
+
+mod_sex_edad <- lm(log_ingreso~mujer+edad+edad_sqr,data=entrenamiento)
+
+y_hat_dentro_sex_edad <- exp(predict(mod_sex_edad, entrenamiento))
+y_hat_fuera_sex_edad <-exp(predict(mod_sex_edad, prueba))
+y_real_dentro_sex_edad <- entrenamiento$ingreso
+y_real_fuera_sex_edad <- prueba$ingreso
+
+mse_dentro_sex_edad <- mean((y_real_dentro_sex_edad-y_hat_dentro_sex_edad)^2)
+mse_fuera_sex_edad <- mean((y_real_fuera_sex_edad-y_hat_fuera_sex_edad)^2)
+
+mse_fuera_sex_edad/mse_dentro_sex_edad
+
+##A.3
+## Modelo por sexo  - edad y ocupación
+
+mod_sex_edad_ocu <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion),data=entrenamiento)
+
+y_hat_dentro_sex_edad_ocu <- exp(predict(mod_sex_edad_ocu, entrenamiento))
+y_hat_fuera_sex_edad_ocu <-exp(predict(mod_sex_edad_ocu, prueba))
+y_real_dentro_sex_edad_ocu <- entrenamiento$ingreso
+y_real_fuera_sex_edad_ocu <- prueba$ingreso
+mse_dentro_sex_edad_ocu <- mean((y_real_dentro_sex_edad_ocu-y_hat_dentro_sex_edad_ocu)^2)
+mse_dentro_sex_edad_ocu
+mse_fuera_sex_edad_ocu <- mean((y_real_fuera_sex_edad_ocu-y_hat_fuera_sex_edad_ocu)^2)
+mse_fuera_sex_edad_ocu
+
+mse_fuera_sex_edad_ocu/mse_dentro_sex_edad_ocu
+
+## Modelo por sexo  - edad3 y ocupación
+
+mod_sex_edad3 <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3,data=entrenamiento)
+
+y_hat_dentro_sex_edad3 <- exp(predict(mod_sex_edad3, entrenamiento))
+y_hat_fuera_sex_edad3 <-exp(predict(mod_sex_edad3, prueba))
+y_real_dentro_sex_edad3 <- entrenamiento$ingreso
+y_real_fuera_sex_edad3 <- prueba$ingreso
+
+mse_dentro_sex_edad3 <- mean((y_real_dentro_sex_edad3-y_hat_dentro_sex_edad3)^2)
+mse_dentro_sex_edad3
+mse_fuera_sex_edad3 <- mean((y_real_fuera_sex_edad3-y_hat_fuera_sex_edad3)^2)
+mse_fuera_sex_edad3
+
+mse_fuera_sex_edad3/mse_dentro_sex_edad3
+
+## Modelo por sexo - tiempoempresa3
+
+mod_sex_empresa3 <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3,data=entrenamiento)
+
+y_hat_dentro_sex_empresa3 <- exp(predict(mod_sex_empresa3, entrenamiento))
+y_hat_fuera_sex_empresa3 <-exp(predict(mod_sex_empresa3, prueba))
+y_real_dentro_sex_empresa3 <- entrenamiento$ingreso
+y_real_fuera_sex_empresa3 <- prueba$ingreso
+
+mse_dentro_sex_empresa3 <- mean((y_real_dentro_sex_empresa3-y_hat_dentro_sex_empresa3)^2)
+mse_fuera_sex_empresa3 <- mean((y_real_fuera_sex_empresa3-y_hat_fuera_sex_empresa3)^2)
+
+mse_fuera_sex_empresa3/mse_dentro_sex_empresa3
+
 ## Modelo REG4 
 
 mod_reg4 <- lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=entrenamiento)
 
 y_hat_dentro_reg4 <- predict(mod_reg4, entrenamiento)
-y_hat_fuera_reg4 <-predict(mod_reg4, prueba)
+y_hat_fuera_reg4 <-predict(mod_reg4, newdata=prueba)
 y_real_dentro_reg4 <- entrenamiento$ingreso
 y_real_fuera_reg4 <- prueba$ingreso
 
 mse_dentro_reg4 <- mean((y_real_dentro_reg4-y_hat_dentro_reg4)^2)
 mse_fuera_reg4 <- mean((y_real_fuera_reg4-y_hat_fuera_reg4)^2)
 
-mse_fuera_reg4/mse_dentro_reg4 ### ver el overfitting
+mse_fuera_reg4/mse_dentro_reg4 
 
 ## Modelo edad
 
@@ -444,85 +528,12 @@ mse_fuera_edad <- mean((y_real_fuera_edad-y_hat_fuera_edad)^2)
 
 mse_fuera_edad/mse_dentro_edad ### ver el overfitting
 
-## Modelo por sexo
-
-mod_sex <- lm(log_ingreso~mujer,data=entrenamiento)
-
-y_hat_dentro_sex <- predict(mod_sex, entrenamiento)
-y_hat_fuera_sex <-predict(mod_sex, prueba)
-y_real_dentro_sex <- entrenamiento$ingreso
-y_real_fuera_sex <- prueba$ingreso
-
-mse_dentro_sex <- mean((y_real_dentro_sex-y_hat_dentro_sex)^2)
-mse_fuera_sex <- mean((y_real_fuera_sex-y_hat_fuera_sex)^2)
-
-mse_fuera_sex/mse_dentro_sex ### ver el overfitting
-
-## Modelo por sexo y edad
-
-mod_sex_edad <- lm(log_ingreso~mujer+edad+edad_sqr,data=entrenamiento)
-
-y_hat_dentro_sex_edad <- predict(mod_sex_edad, entrenamiento)
-y_hat_fuera_sex_edad <-predict(mod_sex_edad, prueba)
-y_real_dentro_sex_edad <- entrenamiento$ingreso
-y_real_fuera_sex_edad <- prueba$ingreso
-
-mse_dentro_sex_edad <- mean((y_real_dentro_sex_edad-y_hat_dentro_sex_edad)^2)
-mse_fuera_sex_edad <- mean((y_real_fuera_sex_edad-y_hat_fuera_sex_edad)^2)
-
-mse_fuera_sex_edad/mse_dentro_sex_edad
-
-##A.3
-## Modelo por sexo  - edad y ocupación
-
-mod_sex_edad_ocu <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion),data=entrenamiento)
-
-y_hat_dentro_sex_edad_ocu <- predict(mod_sex_edad_ocu, entrenamiento)
-y_hat_fuera_sex_edad_ocu <-predict(mod_sex_edad_ocu, prueba)
-y_real_dentro_sex_edad_ocu <- entrenamiento$ingreso
-y_real_fuera_sex_edad_ocu <- prueba$ingreso
-
-mse_dentro_sex_edad_ocu <- mean((y_real_dentro_sex_edad_ocu-y_hat_dentro_sex_edad_ocu)^2)
-mse_dentro_sex_edad_ocu
-mse_fuera_sex_edad_ocu <- mean((y_real_fuera_sex_edad_ocu-y_hat_fuera_sex_edad_ocu)^2)
-mse_fuera_sex_edad_ocu
-
-mse_fuera_sex_edad_ocu/mse_dentro_sex_edad_ocu
-
-## Modelo por sexo  - edad3 y ocupación
-
-mod_sex_edad3 <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3,data=entrenamiento)
-
-y_hat_dentro_sex_edad3 <- predict(mod_sex_edad3, entrenamiento)
-y_hat_fuera_sex_edad3 <-predict(mod_sex_edad3, prueba)
-y_real_dentro_sex_edad3 <- entrenamiento$ingreso
-y_real_fuera_sex_edad3 <- prueba$ingreso
-
-mse_dentro_sex_edad3 <- mean((y_real_dentro_sex_edad3-y_hat_dentro_sex_edad3)^2)
-mse_fuera_sex_edad3 <- mean((y_real_fuera_sex_edad3-y_hat_fuera_sex_edad3)^2)
-
-mse_fuera_sex_edad3/mse_dentro_sex_edad3
-
-## Modelo por sexo - tiempoempresa3
-
-mod_sex_empresa3 <- lm(log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3,data=entrenamiento)
-
-y_hat_dentro_sex_empresa3 <- predict(mod_sex_empresa3, entrenamiento)
-y_hat_fuera_sex_empresa3 <-predict(mod_sex_empresa3, prueba)
-y_real_dentro_sex_empresa3 <- entrenamiento$ingreso
-y_real_fuera_sex_empresa3 <- prueba$ingreso
-
-mse_dentro_sex_empresa3 <- mean((y_real_dentro_sex_empresa3-y_hat_dentro_sex_empresa3)^2)
-mse_fuera_sex_empresa3 <- mean((y_real_fuera_sex_empresa3-y_hat_fuera_sex_empresa3)^2)
-
-mse_fuera_sex_empresa3/mse_dentro_sex_empresa3
-
 ## modelo por sexo - edad4
 
 mod_sex_edad4 <- lm(log_ingreso~mujer+edad+edad_sqr+edad_3+edad_4+as.factor(ocupacion)+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3,data=entrenamiento)
 
-y_hat_dentro_sex_edad4 <- predict(mod_sex_edad4, entrenamiento)
-y_hat_fuera_sex_edad4 <-predict(mod_sex_edad4, prueba)
+y_hat_dentro_sex_edad4 <- exp(predict(mod_sex_edad4, entrenamiento))
+y_hat_fuera_sex_edad4 <-exp(predict(mod_sex_edad4, prueba))
 y_real_dentro_sex_edad4 <- entrenamiento$ingreso
 y_real_fuera_sex_edad4 <- prueba$ingreso
 
@@ -535,8 +546,8 @@ mse_fuera_sex_edad4/mse_dentro_sex_edad4
 
 mod_sex_empresa4 <- lm(log_ingreso~mujer+edad+edad_sqr+edad_3+edad_4+as.factor(ocupacion)+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3+tiempoempresa_4,data=entrenamiento)
 
-y_hat_dentro_sex_empresa4 <- predict(mod_sex_empresa4, entrenamiento)
-y_hat_fuera_sex_empresa4 <-predict(mod_sex_empresa4, prueba)
+y_hat_dentro_sex_empresa4 <- exp(predict(mod_sex_empresa4, entrenamiento))
+y_hat_fuera_sex_empresa4 <-exp(predict(mod_sex_empresa4, prueba))
 y_real_dentro_sex_empresa4 <- entrenamiento$ingreso
 y_real_fuera_sex_empresa4 <- prueba$ingreso
 
@@ -546,3 +557,110 @@ mse_fuera_sex_empresa4 <- mean((y_real_fuera_sex_empresa4-y_hat_fuera_sex_empres
 mse_fuera_sex_empresa4/mse_dentro_sex_empresa4
 
 
+#### gráfica de los modelos por MSE en Prueba (Test)
+mse <- c(mse_fuera_mf, mse_fuera_sex, mse_fuera_sex_edad, mse_fuera_sex_edad_ocu, mse_fuera_sex_edad3, mse_fuera_sex_empresa3, mse_fuera_reg4, mse_fuera_edad, mse_fuera_sex_edad4, mse_fuera_sex_empresa4)
+ScaleXmod<-c('m1', 'm2', 'm3' ,'m4', 'm5','m6','m7','m8','m9','m10')
+grafica_mse <- data.frame(modelos=c(1,2,3,4,5,6,7,8,9,10),
+                          MSE=mse)
+rownames(grafica_mse)<-c(1,2,3,4,5,6,7,8,9,10)
+
+ggplot(grafica_mse, aes(x=modelos,y=MSE, group = 1)) + 
+  geom_line() +
+  theme_classic() + 
+  scale_x_continuous(breaks = c(1:10),
+                     labels= ScaleXmod)
+
+
+#### Punto 5. a. v)
+
+# Se calcula el Laverage statistic para la muestra de test
+
+#Loop para cada observación
+
+test <- prueba       ## clonamos la base             
+rownames(test) <- 1:nrow(test)  # resetear el índice
+nrow(test)
+
+N_t<- nrow(test)
+##N_t<-3 testeo para el loop
+
+## Iteración sobre la cantidad de filas de la muestra de prueba para clcular el laverage statistic (alpha)
+laverages <- c()
+for (j_h in 1:N_t){
+  test<-test %>% mutate(res_y_x = lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,test)$residuals,
+                            e_j = ifelse(rownames(test)==j_h,
+                                              1,0),
+                            res_e_x=lm(e_j~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,test)$residuals,
+  )
+  reg4<-lm(res_y_x~res_e_x,test)
+  u_j<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=test)$residual[j_h]
+  h_j<-lm.influence(reg1)$hat[j_h]
+  alpha<-u_j/(1-h_j)
+  laverages <- c(laverages,alpha)
+}
+
+
+length(laverages) ## comprobar el largo de laverage para ver si tiene el mismo número de filas que la muestra de copia test
+prueba$laverage <- laverages ## pegar al dataframe de prueba los laverages
+prueba <- prueba %>% mutate(atipico = ifelse((log_ingreso>up | log_ingreso< low),
+                                             1,
+                                             0)) ## crear variable que marca si es atípico o no
+## Ordenar la muestra de prueba para ver si los laverages mayores tienen datos atípicos
+prueba <- prueba[order(prueba$laverage,decreasing = T),]
+
+
+
+
+#### Punto 5. b)
+
+
+set.seed(101010)
+
+### falta el modelo de la constante y el LAverage
+
+modelos <- list(log_ingreso~mujer,
+             log_ingreso~mujer+edad+edad_sqr,
+             log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion),
+             log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3,
+             log_ingreso~mujer+edad+edad_sqr+as.factor(ocupacion)+edad_3+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3,
+             ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,
+             ingreso~edad+edad_sqr,
+             log_ingreso~mujer+edad+edad_sqr+edad_3+edad_4+as.factor(ocupacion)+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3,
+             log_ingreso~mujer+edad+edad_sqr+edad_3+edad_4+as.factor(ocupacion)+tiempoempresa+tiempoempresa_sqr+tiempoempresa_3+tiempoempresa_4)
+
+MSE_CV <- c()
+for (i in modelos){
+  model<-train(i,
+               data = db_final[,-3],
+               trControl = trainControl(method = "cv", number = 5),
+               method = "null")                                            # specifying regression model
+  
+  mse_cv <- model[["results"]][["RMSE"]]
+  MSE_CV<-c(MSE_CV,mse_cv)
+}
+MSE_CV
+MSE_CV_2<-c(log(MSE_CV[6]))
+MSE_CV_2 #### Las unidades de medida están generando problemática
+
+
+
+
+
+
+
+
+#### Punto 5. c)
+# LOOCV
+
+N<- nrow(db_final)
+
+
+## Iteración sobre la cantidad de filas de la muestra de prueba para clcular el laverage statistic (alpha)
+
+for (i_h in 1:N){
+  reg_loocv<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, data=db_final[-i_h,])
+                y_hat_i <- predict(reg_loocv, db_final[i_h,])
+                error_predict <- db_final[i_h,]$ingreso-y_hat_i
+  LOOCv <- mean(error_predict)
+}
+LOOCv
