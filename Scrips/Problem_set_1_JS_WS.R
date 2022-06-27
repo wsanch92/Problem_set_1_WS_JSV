@@ -404,8 +404,8 @@ mse_mod2
 
 ###################################################################
 ## DATOS ATÍPICOS
-Q<- quantile(db_final$log_ingreso,probs = c(0.25,0.75),na.rm=F)
-iqr <- IQR(x=db_final$log_ingreso , na.rm=F)
+Q<- quantile(db_final$ingreso,probs = c(0.25,0.75),na.rm=F)
+iqr <- IQR(x=db_final$ingreso , na.rm=F)
 up <- Q[2]+1.5*iqr # Upper Range
 low<- Q[1]-1.5*iqr # Lower Range
 ###################################################################
@@ -453,7 +453,7 @@ y_real_fuera_sex <- prueba$ingreso
 mse_dentro_sex <- mean((y_real_dentro_sex-y_hat_dentro_sex)^2)
 mse_fuera_sex <- mean((y_real_fuera_sex-y_hat_fuera_sex)^2)
 
-mse_fuera_sex/mse_dentro_sex ### ver el overfitting
+mse_fuera_sex/mse_dentro_sex ### 
 
 ## Modelo por sexo y edad
 
@@ -607,9 +607,9 @@ for (j_h in 1:N_t){
                                               1,0),
                             res_e_x=lm(e_j~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,test)$residuals,
   )
-  reg4<-lm(res_y_x~res_e_x,test)
+  reg_laverage<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=test)
   u_j<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=test)$residual[j_h]
-  h_j<-lm.influence(reg1)$hat[j_h]
+  h_j<-lm.influence(reg_laverage)$hat[j_h]
   alpha<-u_j/(1-h_j)
   laverages <- c(laverages,alpha)
 }
@@ -617,13 +617,12 @@ for (j_h in 1:N_t){
 
 length(laverages) ## comprobar el largo de laverage para ver si tiene el mismo número de filas que la muestra de copia test
 prueba$laverage <- laverages ## pegar al dataframe de prueba los laverages
-prueba <- prueba %>% mutate(atipico = ifelse((log_ingreso>up | log_ingreso< low),
-                                             1,
-                                             0)) ## crear variable que marca si es atípico o no
 ## Ordenar la muestra de prueba para ver si los laverages mayores tienen datos atípicos
 prueba <- prueba[order(prueba$laverage,decreasing = T),]
 
 
+ggplot(prueba, aes(x=laverage, y=ingreso)) +
+  geom_line()
 
 
 #### Punto 5. b)
@@ -656,10 +655,6 @@ for (i in modelos){
 MSE_CV
 MSE_CV_2<-c(log(MSE_CV[6]))
 MSE_CV_2 #### Las unidades de medida están generando problemática
-
-
-
-
 
 
 
