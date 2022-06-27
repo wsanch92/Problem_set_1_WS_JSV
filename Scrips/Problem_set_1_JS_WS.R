@@ -68,11 +68,11 @@ saveRDS(object = db, file = "C:/Users/walte/OneDrive/Documentos/Maestría en Eco
 ## Cargar datos
 
 #pc Walter
-db <- read_rds("C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
+#db <- read_rds("C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
 
 #pc juancho
 
-#db<- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
+db<- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
 
 ## Creación y tratamiento de variables
 ## ocupados  mayores de 18
@@ -104,7 +104,9 @@ colnames(db_final)
 ## Renombrar variables
 names (db_final) <- c('edad','ingreso','ingtotes','ingtotob','niveleduc','p6210s1','actividad','ocupacion','sex','fex_c','mes','tiempoempresa','oficio')
 
-db_final <- db_final[db_final$ocupacion!=8,]
+db_final<- db_final%>%mutate(ocupacion=ifelse(ocupacion==8,
+                                          9,
+                                          ocupacion))
 
 
 
@@ -144,6 +146,7 @@ db_final <- db_final %>% mutate(db_final, tiempoempresa_sqr=tiempoempresa^2) ## 
 ## Resumen de la base con las variables elegidas
 
 skim(db_final[,vars_final])
+table(db_final$ocupacion)
 
 ## Gráficos
 
@@ -195,6 +198,9 @@ reg5.3<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, fact
 
 
 stargazer(reg1,reg2,reg3,reg4,reg5,reg5.1,reg5.2,reg5.3,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones.htm")
+##modelos definitivos a presentar 
+stargazer(reg1,reg4,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones_presentar.htm")
+
 #?stargazer
 
 plot(db_final$edad,db_final$ingreso,xlab = 'Edad', ylab='Ingreso',cex=0.5)
@@ -218,6 +224,12 @@ mse_3<- mean((db_final$ingreso-yhat_reg3)^2)
 db_final$yhat_reg4 <-predict(reg4)
 yhat_reg4<-predict(reg4,db_final)
 mse_4<- mean((db_final$ingreso-yhat_reg4)^2)
+mse_4
+##gráfica de los predichos del modelo 
+plot(db_final$edad,db_final$yhat_reg4,xlab = 'Edad', ylab='Ingreso',cex=0.5)
+abline(reg4, col = "red")
+
+
 
 db_final$yhat_reg5 <-predict(reg5)
 yhat_reg5<-predict(reg5,db_final)
@@ -289,6 +301,9 @@ db_final<- db_final%>%mutate(log_ingreso=log(ingreso))
 ## Primer modelo diferencia de ingresos por sexo
 mod1<-lm(log_ingreso~mujer,data=db_final)
 mod1
+stargazer(mod1,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/mod1_por_sexo.htm")
+
+
 
 ## qué tan bueno es el modelo en la muestra
 db_final$yhat_mod1 <-predict(mod1)
@@ -329,8 +344,8 @@ prueba_boot.fn<-function(db_mujer,index){
   coef(lm(log_ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_mujer, subset = index))
 }
 
-boot<-boot(db_mujer, prueba_boot.fn, R=1000)
-boot
+boot_m<-boot(db_mujer, prueba_boot.fn, R=1000)
+boot_m
 
 mod_m
 stargazer(mod_m, type="text")
@@ -345,8 +360,8 @@ prueba_boot.fn<-function(db_hombre,index){
   coef(lm(log_ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr,data=db_hombre, subset = index))
 }
 
-boot<-boot(db_hombre, prueba_boot.fn, R=1000)
-boot
+boot_h<-boot(db_hombre, prueba_boot.fn, R=1000)
+boot_h
 
 mod_h
 stargazer(mod_h, type="text")
