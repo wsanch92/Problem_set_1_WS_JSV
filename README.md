@@ -20,10 +20,9 @@
 		2) Construir y estimar el mejor modelo de predicción de los ingresos controlando por distintas variable que expliquen los ingresos de las personas ocupadas mayores de 18 años
 
 # El Script:
-	Se contruye un script en R que permite llevar a cabo los diferentes objetivos utilizando regresiones, tablas y gráficos.
+	Se construye un script en R que permite llevar a cabo los diferentes objetivos utilizando regresiones, tablas y gráficos.
 
-	En primera instancia, el script desarrolla la técnica de Web Scraping con funciones del paquete "rvest" extrayendo, a través de un proceso iterativo, las particiones de las bases
-de la GEIH-2018 alojadas en la página web "https://ignaciomsarmiento.github.io/GEIH2018_sample/", y finalmente, dejar una sola base para uso del proyecto llamada "db". 
+	En primera instancia, el script desarrolla la técnica de Web Scraping con funciones del paquete "rvest" extrayendo, a través de un proceso iterativo, las particiones de las bases de la GEIH-2018 alojadas en la página web "https://ignaciomsarmiento.github.io/GEIH2018_sample/", y finalmente, dejar una sola base para uso del proyecto llamada "db". 
 Esta base, sufre algunas adecuaciones como creación de variables o filtros para logra un Data Frame final: el "db_final".
 
 A partir de la base se estiman modelos de ingresos controlando por variables que a la luz de la literatura, tienen un efecto causal en la tenencia de ingresos. Se calculan diferentes estadísticos como el Laverage, Mean Squart Error (MSE) y 
