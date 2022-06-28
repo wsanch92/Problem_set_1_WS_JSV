@@ -31,3 +31,10 @@ Leave-One-Out Cross Validation (LOOCV). Además, se emplean técnicas como el Bo
 
 Nota!!: Tener en cuenta qué, en las siguientes líneas de código se debe cambiar la ruta por una ruta de directorio del equipo local :
 	65,71,189,293,323 y 395
+
+Este Problem Set 1, está compuesto por un repositorio que se compone de 4 carpetas con sus respectivos contenidos en las cuales se encontrará la información necesaria para replicar el documento, de la siguiente manera:
+	Data: Donde se guarda las base del Web Scraping para ser cargada posteriormente.
+	Documentos: Donde se almacena el documento final y algunos archivos de interés.
+	Scripts: Ubicación del script de R llamado "Problem_set_1_JS_WS.R", que contiene toda la codificación para replicar los resultados, tablas y gráficos utilizados en la elaboración del documento.
+	Tablas_gráficos: Ruta de almacenamiento de las gráficas y tablas de interés generadas por el script.
+
