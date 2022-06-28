@@ -67,12 +67,9 @@ saveRDS(object = db, file = "C:/Users/walte/OneDrive/Documentos/Maestría en Eco
 
 ## Cargar datos
 
-#pc Walter
-#db <- read_rds("C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
+#Ruta directorio
+db <- read_rds("C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Tablas_grafico/Datos_geih_bogota.rds")
 
-#pc juancho
-
-db<- read_rds("/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/Datos_geih_bogota.rds")
 
 ## Creación y tratamiento de variables
 ## ocupados  mayores de 18
@@ -148,23 +145,15 @@ db_final <- db_final %>% mutate(db_final, tiempoempresa_sqr=tiempoempresa^2) ## 
 skim(db_final[,vars_final])
 table(db_final$ocupacion)
 
-## Gráficos
+############# Gráficos de ingresos
 
-#ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
-  #geom_histogram(data=db_1 , aes(x=ingtotes) , fill="blue" , alpha=0.5) +
-  #geom_histogram(data=db_1 , aes(x=ingtotob) , fill="red" , alpha=0.5)
-#
-
-#ggplot() + geom_histogram(data=db_1 , aes(x=ingtot) , fill="coral1" , alpha=0.5) + 
-  #geom_histogram(data=db_1 , aes(x=ingtotob) , fill="blue1" , alpha=0.5)
-
+## Ingresos vs Edad
 ggplot(data = db_final , 
        mapping = aes(x = edad , y = ingreso , group=as.factor(sex) , color=as.factor(sex))) +
   geom_point()
 
 
-
-
+## Ingresos vs rangos de edad
 ggplot(data = db_final , 
        mapping = aes(x = rangos_edad , y = edad , group=as.factor(sex) , color=as.factor(sex))) + 
          geom_col()
@@ -194,14 +183,11 @@ reg5.1<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, fact
 reg5.2<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, factor(oficio),data=db_final)
 reg5.3<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, factor(oficio),data=db_final[db_final$actividad==1,])
 
-
-
-
-stargazer(reg1,reg2,reg3,reg4,reg5,reg5.1,reg5.2,reg5.3,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones.htm")
+# Comparación de mse de modelos
+stargazer(reg1,reg2,reg3,reg4,reg5,reg5.1,reg5.2,reg5.3,type="text")
 ##modelos definitivos a presentar 
-stargazer(reg1,reg4,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones_presentar.htm")
+stargazer(reg1,reg4,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Tablas_grafico/regresiones_presentar.htm")
 
-#?stargazer
 
 plot(db_final$edad,db_final$ingreso,xlab = 'Edad', ylab='Ingreso',cex=0.5)
 abline(reg4, col = "red")
@@ -225,10 +211,10 @@ db_final$yhat_reg4 <-predict(reg4)
 yhat_reg4<-predict(reg4,db_final)
 mse_4<- mean((db_final$ingreso-yhat_reg4)^2)
 mse_4
+
 ##gráfica de los predichos del modelo 
 plot(db_final$edad,db_final$yhat_reg4,xlab = 'Edad', ylab='Ingreso',cex=0.5)
 abline(reg4, col = "red")
-
 
 
 db_final$yhat_reg5 <-predict(reg5)
@@ -286,8 +272,11 @@ stargazer(reg4, type="text")
 ## recordar calculo en excel
 #CI=[coef−1.96×SE,coef+1.96×SE]
 
-## derevida en excel para calcular edad pico (mayor ingreso)
+## calcular edad pico (mayor ingreso)
 
+ingreso_edad_pico<- 22170434.71 # -b1/2b2
+edad_max<-db_final[db_final$ingreso<=ingreso_edad_pico+300000 & db_final$ingreso>=ingreso_edad_pico-300000,"edad"]
+edad_max
 
 ############# PUNTO CUARTO ######################
 
@@ -301,7 +290,7 @@ db_final<- db_final%>%mutate(log_ingreso=log(ingreso))
 ## Primer modelo diferencia de ingresos por sexo
 mod1<-lm(log_ingreso~mujer,data=db_final)
 mod1
-stargazer(mod1,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/mod1_por_sexo.htm")
+stargazer(mod1,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Tablas_grafico/mod1_por_sexo.htm")
 
 
 
@@ -330,10 +319,22 @@ plot(db_final$edad,db_final$log_ingreso,xlab = 'Edad', ylab='log_ingreso',cex=0.
 abline(mod_m, col = "red")
 abline(mod_h, col = "blue")
 
-## Comprar modelos y exportarlos
-stargazer(mod_m,mod_h,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Data/regresiones_por_sexo.htm")
+## Comprar modelos por género y exportarlos 
+stargazer(mod_m,mod_h,type="text",out = "/Users/usuario/Desktop/Problem_set_1_WS_JSV/Tablas_grafico/regresiones_por_sexo.htm")
 
-##recordar hacer la derivada para los modelos por sexo
+
+## calcular edad pico (mayor log ingreso) MUJERES
+
+ingreso_edad_pico_m<- -0.25 # -b1/2b2
+edad_max_m<-db_mujer[db_mujer$log_ingreso<=ingreso_edad_pico_m+10.1 & db_mujer$log_ingreso>=ingreso_edad_pico_m-10.1,"edad"]
+edad_max_m
+
+## calcular edad pico (mayor log ingreso) HOMBRES
+ingreso_edad_pico_h<- -0.34 # -b1/2b2
+edad_max_h<-db_hombre[db_hombre$log_ingreso<=ingreso_edad_pico_h+10.5 & db_hombre$log_ingreso>=ingreso_edad_pico_h-10.5,"edad"]
+edad_max_h
+ 
+
 
 ##bootstrap modelos por sexo 
 set.seed(2022)
@@ -347,7 +348,8 @@ prueba_boot.fn<-function(db_mujer,index){
 boot_m<-boot(db_mujer, prueba_boot.fn, R=1000)
 boot_m
 
-mod_m
+
+mod_m  ## modelo mujeres
 stargazer(mod_m, type="text")
 
 ##hombre
@@ -363,22 +365,22 @@ prueba_boot.fn<-function(db_hombre,index){
 boot_h<-boot(db_hombre, prueba_boot.fn, R=1000)
 boot_h
 
-mod_h
+mod_h  ## modelo hombres
 stargazer(mod_h, type="text")
 
 ## recordar construir los intervalos de confianza en Excel
 
 
-##controlar por ocupación para ver como se reduce la brecha y establecer la explicación de porque se disminuye dicha brecha
+##controlar por ocupación para ver cómo se reduce la brecha y establecer la explicación del porqué se disminuye dicha brecha
 
 mod2<-lm(log_ingreso~mujer+as.factor(ocupacion),data=db_final)## primer modelo y~x
 mod2
 mod1
 
-##teorema FWL
+######################### TEOREMA FWL ##############################
 mod2
 db_final<- db_final%>%mutate(ej=c(rep(0,nrow(db_final)-1),1))
-tail(db_final)
+#tail(db_final)
 
 ##regresión con la variable ej 
 mod3<-lm(log_ingreso~mujer+ej,data=db_final) ## regresión con la dummy
@@ -390,9 +392,9 @@ db_final<-db_final %>% mutate(res_y_e=lm(log_ingreso~ej,db_final)$residuals,
 
 mod4<-lm(res_y_e~res_x_e,db_final)
 
-stargazer(mod1,mod3,mod4,type="text")
+stargazer(mod1,mod3,mod4,type="text",out = "C:/Users/walte/OneDrive/Documentos/Maestría en Economía Aplicada/Big Data/GitHub/Talleres/Problem_set_1_WS_JSV/Tablas_graficos/TEOREMA_FML.htm")
 
-## qué tan bueno controlando por la empleabilidad en el modelo por sexo
+## qué tan bueno es el modelo por sexo controlando por la empleabilidad
 db_final$yhat_mod2 <-predict(mod2)
 yhat_mod2<-predict(mod2,db_final)
 mse_mod2<- mean((db_final$log_ingreso-yhat_mod2)^2)
@@ -586,7 +588,7 @@ ggplot(grafica_mse, aes(x=modelos,y=MSE, group = 1)) +
                      labels= ScaleXmod)
 
 
-#### Punto 5. a. v)
+#### PUNTO 5. a. v)
 
 # Se calcula el Laverage statistic para la muestra de test
 
@@ -617,12 +619,13 @@ for (j_h in 1:N_t){
 
 length(laverages) ## comprobar el largo de laverage para ver si tiene el mismo número de filas que la muestra de copia test
 prueba$laverage <- laverages ## pegar al dataframe de prueba los laverages
+
 ## Ordenar la muestra de prueba para ver si los laverages mayores tienen datos atípicos
+prueba <- prueba %>% mutate(atipico_ing = ifelse(prueba$ingreso>up,
+                                                 1,
+                                                 0))
+
 prueba <- prueba[order(prueba$laverage,decreasing = T),]
-
-
-ggplot(prueba, aes(x=laverage, y=ingreso)) +
-  geom_line()
 
 
 #### Punto 5. b)
@@ -630,7 +633,7 @@ ggplot(prueba, aes(x=laverage, y=ingreso)) +
 
 set.seed(101010)
 
-### falta el modelo de la constante y el LAverage
+### falta el modelo de la constante y el Laverage
 
 modelos <- list(log_ingreso~mujer,
              log_ingreso~mujer+edad+edad_sqr,
@@ -653,8 +656,6 @@ for (i in modelos){
   MSE_CV<-c(MSE_CV,mse_cv)
 }
 MSE_CV
-MSE_CV_2<-c(log(MSE_CV[6]))
-MSE_CV_2 #### Las unidades de medida están generando problemática
 
 
 
@@ -666,11 +667,24 @@ N<- nrow(db_final)
 
 
 ## Iteración sobre la cantidad de filas de la muestra de prueba para clcular el laverage statistic (alpha)
-
+error_predict_loocv <-c()
 for (i_h in 1:N){
   reg_loocv<-lm(ingreso~edad+edad_sqr+niveleduc+tiempoempresa+tiempoempresa_sqr, data=db_final[-i_h,])
                 y_hat_i <- predict(reg_loocv, db_final[i_h,])
                 error_predict <- db_final[i_h,]$ingreso-y_hat_i
-  LOOCv <- mean(error_predict)
+                error_predict_loocv <- c(error_predict_loocv,error_predict)
+  LOOCV <- mean(error_predict)
 }
-LOOCv
+LOOCV
+
+## Gráfico comparativo de Laverage y LOOCV
+length(error_predict_loocv)
+db_final$error_predict_loocv<- error_predict_loocv
+
+prueba_LOOCV_Lav<- db_final[-id_entrenamiento,]
+prueba_LOOCV_Lav$laverage <- laverages
+
+ggplot() + 
+  geom_line(prueba_LOOCV_Lav, mapping=aes(x=laverages,y=ingreso)) +
+  geom_line(prueba_LOOCV_Lav,  mapping=aes(x=error_predict_loocv,y=ingreso, color="red")) +
+  theme_classic()
